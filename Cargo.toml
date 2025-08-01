@@ -7,17 +7,17 @@ edition = "2021"
 unix_clip = ["arboard"]
 
 [dependencies]
-notify = "*"
-tokio = { features = ["rt-multi-thread", "macros"] }
-tray-icon = "*"
-clipboard-win = "*"
-arboard = { optional = true }
-dirs = "*"
-serde = { features = ["derive"] }
-serde_json = "*"
-anyhow = "*"
-crossbeam-channel = "*"
-windows = { features = ["Win32_System_DataExchange", "Win32_UI_Shell", "Win32_Foundation"] }
+notify = "6.1"
+tokio = { version = "1.38", features = ["rt-multi-thread", "macros"] }
+tray-icon = "0.21"
+clipboard-win = "5.3"
+arboard = { version = "3.3", optional = true }
+dirs = "5.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+crossbeam-channel = "0.5"
+windows = { version = "0.56", features = ["Win32_System_DataExchange", "Win32_UI_Shell", "Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
 
 [dev-dependencies]
-cargo-watch = "*"
+cargo-watch = "8"
