@@ -1,0 +1,90 @@
+name: ci
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          
+      - name: cache rust dependencies
+        uses: Swatinem/rust-cache@v2
+        
+      - name: run tests
+        run: cargo test --verbose
+        
+      - name: check formatting
+        run: cargo fmt -- --check
+        
+      - name: run clippy
+        run: cargo clippy -- -D warnings
+
+  build:
+    name: build windows
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          
+      - name: cache rust dependencies
+        uses: Swatinem/rust-cache@v2
+        
+      - name: build release
+        run: cargo build --release --verbose
+        
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesclip-windows
+          path: target/release/yesclip.exe
+
+  release:
+    name: release
+    runs-on: windows-latest
+    needs: build
+    if: github.event_name == 'release'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          
+      - name: cache rust dependencies
+        uses: Swatinem/rust-cache@v2
+        
+      - name: build release
+        run: cargo build --release --verbose
+        
+      - name: upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: target/release/yesclip.exe
+          asset_name: yesclip-windows.exe
+          asset_content_type: application/octet-stream
