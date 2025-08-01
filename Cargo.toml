@@ -1,0 +1,23 @@
+[package]
+name = "yesclip"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+unix_clip = ["arboard"]
+
+[dependencies]
+notify = "*"
+tokio = { features = ["rt-multi-thread", "macros"] }
+tray-icon = "*"
+clipboard-win = "*"
+arboard = { optional = true }
+dirs = "*"
+serde = { features = ["derive"] }
+serde_json = "*"
+anyhow = "*"
+crossbeam-channel = "*"
+windows = { features = ["Win32_System_DataExchange", "Win32_UI_Shell", "Win32_Foundation"] }
+
+[dev-dependencies]
+cargo-watch = "*"
