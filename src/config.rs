@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
-use dirs::config_dir;
-use std::{fs, io::Write, path::PathBuf};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
@@ -9,29 +8,46 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { copy_text_files_as_plain: false }
+        Self {
+            copy_text_files_as_plain: true,
+        }
     }
 }
 
 impl Settings {
-    pub fn path() -> PathBuf {
-        config_dir().unwrap().join("yesclip").join("settings.json")
-    }
-    
     pub fn load() -> Self {
-        let path = Self::path();
-        fs::create_dir_all(path.parent().unwrap()).ok();
-        fs::read_to_string(&path)
-            .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
-            .unwrap_or_default()
+        let config_path = Self::config_path();
+        match std::fs::read_to_string(&config_path) {
+            Ok(contents) => match serde_json::from_str(&contents) {
+                Ok(settings) => settings,
+                Err(_) => {
+                    let default = Self::default();
+                    let _ = default.save();
+                    default
+                }
+            },
+            Err(_) => {
+                let default = Self::default();
+                let _ = default.save();
+                default
+            }
+        }
     }
-    
+
     pub fn save(&self) -> anyhow::Result<()> {
-        let s = serde_json::to_string_pretty(self)?;
-        let mut f = fs::File::create(Self::path())?;
-        f.write_all(s.as_bytes())?;
+        let config_path = Self::config_path();
+        if let Some(parent) = config_path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let contents = serde_json::to_string_pretty(self)?;
+        std::fs::write(&config_path, contents)?;
         Ok(())
     }
-}
 
+    fn config_path() -> PathBuf {
+        dirs::config_dir()
+            .unwrap_or_else(|| std::env::current_dir().unwrap())
+            .join("yesclip")
+            .join("config.json")
+    }
+}

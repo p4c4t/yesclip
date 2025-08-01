@@ -4,10 +4,7 @@ use crossbeam_channel::Sender;
 use std::path::PathBuf;
 
 #[derive(Clone)]
-pub enum TrayMsg {
-    ToggleCopyMode,
-    Quit,
-}
+pub enum TrayMsg {}
 
 pub struct TrayContext {
     _tray: tray_icon::TrayIcon,
@@ -16,14 +13,23 @@ pub struct TrayContext {
     _quit: tray_icon::menu::MenuItem,
 }
 
-pub fn init_tray(settings: Settings, _tx: Sender<TrayMsg>, icon_path: &PathBuf) -> Result<TrayContext> {
-    use tray_icon::{TrayIconBuilder, Icon, menu::{Menu, MenuItem, CheckMenuItem, MenuId}};
+pub fn init_tray(settings: Settings, _tx: Sender<TrayMsg>, icon_path: &PathBuf)
+    -> Result<TrayContext>
+{
+    use tray_icon::{
+        menu::{CheckMenuItem, Menu, MenuId, MenuItem},
+        Icon, TrayIconBuilder,
+    };
 
     let icon = Icon::from_path(icon_path, None)?;
 
-    // create context menu
     let menu = Menu::new();
-    let toggle_item = CheckMenuItem::new("copy .md/.txt as plain text", true, settings.copy_text_files_as_plain, None);
+    let toggle_item = CheckMenuItem::new(
+        "copy .md/.txt as plain text",
+        true,
+        settings.copy_text_files_as_plain,
+        None,
+    );
     let quit_item = MenuItem::with_id(MenuId::new("quit"), "quit", true, None);
 
     menu.append(&toggle_item)?;
@@ -35,7 +41,6 @@ pub fn init_tray(settings: Settings, _tx: Sender<TrayMsg>, icon_path: &PathBuf) 
         .with_menu(Box::new(menu.clone()))
         .build()?;
 
-    println!("tray initialized with menu");
     Ok(TrayContext {
         _tray: tray,
         _menu: menu,

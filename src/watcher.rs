@@ -7,7 +7,7 @@ use tokio::task;
 pub async fn spawn_watcher(watch_dir: PathBuf, cfg: Settings) -> Result<()> {
     task::spawn_blocking(move || {
         let (tx, rx) = channel();
-        
+
         let mut watcher = match notify::recommended_watcher(tx) {
             Ok(w) => w,
             Err(e) => {
@@ -15,7 +15,7 @@ pub async fn spawn_watcher(watch_dir: PathBuf, cfg: Settings) -> Result<()> {
                 return;
             }
         };
-        
+
         match watcher.watch(&watch_dir, RecursiveMode::NonRecursive) {
             Ok(_) => {},
             Err(e) => {
@@ -32,7 +32,7 @@ pub async fn spawn_watcher(watch_dir: PathBuf, cfg: Settings) -> Result<()> {
                     continue;
                 }
             };
-            
+
             match evt {
                 Ok(event) => {
                     match event.kind {
@@ -77,6 +77,6 @@ fn handle_new_file(src: &PathBuf, cfg: &Settings) -> Result<()> {
         clipboard::copy_file(src)?;
         println!("copied file to clipboard (cf_hdrop): {}", src.display());
     }
-    
+
     Ok(())
 }

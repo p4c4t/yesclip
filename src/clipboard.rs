@@ -18,44 +18,38 @@ pub fn copy_file(path: &Path) -> Result<()> {
             UI::Shell::DROPFILES,
         };
 
-        // build the double-null-terminated utf-16 filename list
-        let mut wide: Vec<u16> = OsStr::new(path)
+        let wide: Vec<u16> = OsStr::new(path)
             .encode_wide()
             .chain(std::iter::once(0))
-            .chain(std::iter::once(0)) // list terminator
+            .chain(std::iter::once(0))
             .collect();
 
         let bytes_needed = size_of::<DROPFILES>() + wide.len() * 2;
 
         unsafe {
-            // open clipboard
             OpenClipboard(HWND(0))?;
             EmptyClipboard()?;
 
-            // allocate and fill global memory
             let h_mem = GlobalAlloc(GMEM_MOVEABLE, bytes_needed)?;
             
             let ptr = GlobalLock(h_mem) as *mut u8;
             if ptr.is_null() {
-                CloseClipboard();
+                let _ = CloseClipboard();
                 return Err(anyhow::anyhow!("GlobalLock failed"));
             }
 
-            // header
             let df = &mut *(ptr as *mut DROPFILES);
             df.pFiles = size_of::<DROPFILES>() as u32;
             df.fWide = windows::Win32::Foundation::TRUE;
 
-            // filename data right after header
             let data_ptr = ptr.add(size_of::<DROPFILES>());
             std::ptr::copy_nonoverlapping(wide.as_ptr() as *const u8, data_ptr, wide.len() * 2);
 
             let _ = GlobalUnlock(h_mem);
 
-            // put it in the clipboard
             use windows::Win32::Foundation::HANDLE;
             SetClipboardData(CF_HDROP.0 as u32, HANDLE(h_mem.0 as isize))?;
-            CloseClipboard()?;
+            let _ = CloseClipboard();
         }
         Ok(())
     }
@@ -86,4 +80,3 @@ pub fn copy_text(text: &str) -> Result<()> {
         Ok(())
     }
 }
-
