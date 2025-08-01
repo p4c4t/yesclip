@@ -75,11 +75,8 @@ fn handle_new_file(src: &PathBuf, cfg: &Settings) -> Result<()> {
         println!("copied text content to clipboard");
     } else {
         clipboard::copy_file(src)?;
-        println!("copied file path to clipboard: {}", src.display());
+        println!("copied file to clipboard (cf_hdrop): {}", src.display());
     }
-    
-    let tmp = std::env::temp_dir().join(src.file_name().unwrap());
-    std::fs::rename(src, &tmp)?;
     
     Ok(())
 }
